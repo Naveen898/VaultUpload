@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vaultupload-backend
+  labels:
+    app: vaultupload
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: vaultupload
+  template:
+    metadata:
+      labels:
+        app: vaultupload
+    spec:
+      containers:
+      - name: backend
+        image: your-docker-repo/vaultupload-backend:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: secret
+        - name: STORAGE_BUCKET
+          value: "your-storage-bucket"
+        - name: EXPIRY_TIME
+          value: "3600"  # 1 hour expiry
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "512Mi"
+            cpu: "1"
+      imagePullSecrets:
+      - name: regcred
