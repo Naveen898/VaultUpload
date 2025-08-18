@@ -3,9 +3,10 @@ import os
 CLOUD_STORAGE_PROVIDER = os.getenv("CLOUD_STORAGE_PROVIDER", "GCP")  # Options: GCP, AZURE
 
 if CLOUD_STORAGE_PROVIDER == "GCP":
-    GCP_BUCKET_NAME = os.getenv("GCP_BUCKET_NAME")
-    GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
-    GCP_SERVICE_ACCOUNT_JSON = os.getenv("GCP_SERVICE_ACCOUNT_JSON")
+    GCP_BUCKET_NAME = os.getenv("GCP_BUCKET_NAME", "your-bucket-name")
+    GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "your-gcp-project-id")
+    GCP_SERVICE_ACCOUNT_JSON = os.getenv("GCP_SERVICE_ACCOUNT_JSON", "D:\\path\\to\\your\\service-account.json")
+    CLOUD_STORAGE_PROVIDER = os.getenv("CLOUD_STORAGE_PROVIDER", "GCP")
     
     # GCP specific configurations
     CLOUD_CONFIG = {

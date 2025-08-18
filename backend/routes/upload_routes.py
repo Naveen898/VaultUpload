@@ -1,24 +1,195 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from services.storage_service import upload_file, download_file
-from services.scan_service import scan_file
-from utils.file_utils import validate_file
+
+from fastapi import APIRouter, UploadFile, File, HTTPException, Body, Depends
+from fastapi.responses import JSONResponse, StreamingResponse
+from google.cloud import storage
 from utils.logger import logger
+from utils.security_utils import hash_password, verify_password
+from services.jwt_service import generate_share_token, decode_share_token
+from services.scan_service import scan_file
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+from db import get_session
+from models import FileMetadata
+import uuid
 
 router = APIRouter()
 
+MAX_FILE_SIZE = 250 * 1024 * 1024  # 250 MB
+GCS_BUCKET_NAME = "vaultupload2025_1"  # TODO: Replace with your actual bucket name
+
+def get_gcs_client():
+    return storage.Client()
+
+MAX_SECRET_ATTEMPTS = 2
+
+def _ensure_aware(dt: datetime) -> datetime:
+    """Convert naive datetime (assumed UTC) to timezone-aware UTC."""
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
 @router.post("/upload")
-async def upload(file: UploadFile = File(...)):
-    if not validate_file(file):
-        raise HTTPException(status_code=400, detail="Invalid file type")
-    scan_result = scan_file(file)
-    if not scan_result['is_clean']:
-        raise HTTPException(status_code=400, detail="File is infected with a virus")
-    file_url = upload_file(file)
-    return {"url": file_url}
+async def upload_file(
+    file: UploadFile = File(...),
+    expiry_hours: int = 24,
+    secret_word: Optional[str] = None,
+    session: AsyncSession = Depends(get_session)
+):
+    """Upload a file, optional secret, set expiry, virus scan, store metadata."""
+    if expiry_hours < 1 or expiry_hours > 24:
+        raise HTTPException(status_code=400, detail="expiry_hours must be between 1 and 24")
+    try:
+        size = 0
+        chunks: List[bytes] = []
+        while True:
+            chunk = await file.read(1024 * 1024)
+            if not chunk:
+                break
+            size += len(chunk)
+            if size > MAX_FILE_SIZE:
+                logger.warning(f"Upload rejected (too large): {file.filename} size={size}")
+                raise HTTPException(status_code=413, detail="File too large (max 250MB)")
+            chunks.append(chunk)
+        data = b"".join(chunks)
+
+        # Virus scan (supports ClamAV or heuristic)
+        scan_result = scan_file(file.filename, data)
+        if not scan_result.get("is_clean", False):
+            raise HTTPException(status_code=400, detail=f"Virus scan failed: {scan_result.get('reason','unknown')}")
+
+        client = get_gcs_client()
+        bucket = client.bucket(GCS_BUCKET_NAME)
+        file_id = f"{uuid.uuid4()}_{file.filename}"
+        blob = bucket.blob(file_id)
+        blob.upload_from_string(data, content_type=file.content_type or "application/octet-stream")
+
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=expiry_hours)
+        db_obj = FileMetadata(
+            file_id=file_id,
+            orig_name=file.filename,
+            size=size,
+            content_type=file.content_type or "application/octet-stream",
+            secret_hash=hash_password(secret_word) if secret_word else None,
+            expires_at=expires_at,
+        )
+        session.add(db_obj)
+        await session.commit()
+        await session.refresh(db_obj)
+        logger.info(f"Uploaded file {file_id} metadata stored (db)")
+        return {"message": "File uploaded", "file_id": file_id, "metadata": {
+            "file_id": db_obj.file_id,
+            "orig_name": db_obj.orig_name,
+            "size": db_obj.size,
+            "expires_at": db_obj.expires_at.isoformat(),
+            "secret_hash": db_obj.secret_hash,
+            "created_at": db_obj.created_at.isoformat() if db_obj.created_at else None,
+        }}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Upload failed")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@router.get("")
+async def list_files(session: AsyncSession = Depends(get_session)):
+    try:
+        now = datetime.now(timezone.utc)
+        stmt = select(FileMetadata).where(FileMetadata.deleted == False, FileMetadata.expires_at > now)  # noqa
+        result = await session.execute(stmt)
+        files = result.scalars().all()
+        rows = []
+        for f in files:
+            rows.append({
+                "name": f.orig_name,
+                "file_id": f.file_id,
+                "size": f.size,
+                "expires_at": f.expires_at.isoformat(),
+                "downloadUrl": f"/api/uploads/download/{f.file_id}"
+            })
+        return {"files": rows}
+    except Exception as e:
+        logger.exception("List files failed")
+        raise HTTPException(status_code=500, detail=f"List failed: {str(e)}")
+
+@router.get("/share/{file_id}")
+async def generate_share(file_id: str, session: AsyncSession = Depends(get_session)):
+    stmt = select(FileMetadata).where(FileMetadata.file_id == file_id, FileMetadata.deleted == False)  # noqa
+    result = await session.execute(stmt)
+    meta = result.scalar_one_or_none()
+    if not meta:
+        raise HTTPException(status_code=404, detail="File not found")
+    exp = _ensure_aware(meta.expires_at)
+    if exp < datetime.now(timezone.utc):
+        raise HTTPException(status_code=410, detail="File expired")
+    share_token = generate_share_token(file_id, exp)
+    return {"share_token": share_token, "expires_at": exp.isoformat(), "requires_secret": bool(meta.secret_hash)}
+
+@router.post("/access/{file_id}")
+async def access_file(file_id: str, token: str = Body(...), secret_word: Optional[str] = Body(default=None), session: AsyncSession = Depends(get_session)):
+    stmt = select(FileMetadata).where(FileMetadata.file_id == file_id, FileMetadata.deleted == False)  # noqa
+    result = await session.execute(stmt)
+    meta = result.scalar_one_or_none()
+    if not meta:
+        raise HTTPException(status_code=404, detail="File not found")
+    exp = _ensure_aware(meta.expires_at)
+    if exp < datetime.now(timezone.utc):
+        raise HTTPException(status_code=410, detail="File expired")
+    try:
+        payload = decode_share_token(token)
+        if payload.get("sid") != file_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    if meta.secret_hash:
+        if meta.secret_attempts >= MAX_SECRET_ATTEMPTS:
+            raise HTTPException(status_code=429, detail="Too many attempts")
+        if not secret_word or not verify_password(meta.secret_hash, secret_word):
+            await session.execute(update(FileMetadata).where(FileMetadata.file_id == file_id).values(secret_attempts=FileMetadata.secret_attempts + 1))  # type: ignore
+            await session.commit()
+            raise HTTPException(status_code=401, detail="Invalid secret")
+        # reset attempts on success
+        await session.execute(update(FileMetadata).where(FileMetadata.file_id == file_id).values(secret_attempts=0))
+        await session.commit()
+    client = get_gcs_client()
+    bucket = client.bucket(GCS_BUCKET_NAME)
+    blob = bucket.blob(file_id)
+    if not blob.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    stream = blob.open("rb")
+    return StreamingResponse(stream, media_type="application/octet-stream", headers={"Content-Disposition": f"attachment; filename={meta.orig_name}"})
 
 @router.get("/download/{file_id}")
 async def download(file_id: str):
-    file_data = download_file(file_id)
-    if not file_data:
+    # Simple direct download without share security (could be restricted later)
+    client = get_gcs_client()
+    bucket = client.bucket(GCS_BUCKET_NAME)
+    blob = bucket.blob(file_id)
+    if not blob.exists():
         raise HTTPException(status_code=404, detail="File not found")
-    return file_data
+    stream = blob.open("rb")
+    return StreamingResponse(stream, media_type="application/octet-stream", headers={"Content-Disposition": f"attachment; filename={file_id}"})
+
+@router.delete("/{file_id}")
+async def delete_file(file_id: str, session: AsyncSession = Depends(get_session)):
+    try:
+        stmt = select(FileMetadata).where(FileMetadata.file_id == file_id, FileMetadata.deleted == False)  # noqa
+        result = await session.execute(stmt)
+        meta = result.scalar_one_or_none()
+        if not meta:
+            raise HTTPException(status_code=404, detail="File not found")
+        client = get_gcs_client()
+        bucket = client.bucket(GCS_BUCKET_NAME)
+        blob = bucket.blob(file_id)
+        if blob.exists():
+            blob.delete()
+        await session.execute(update(FileMetadata).where(FileMetadata.file_id == file_id).values(deleted=True))
+        await session.commit()
+        logger.info(f"Deleted file {file_id}")
+        return {"message": "Deleted", "filename": file_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Delete failed")
+        raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")

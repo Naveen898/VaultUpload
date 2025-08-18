@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import jwt
-#from flask import current_app
 import os
+import uuid
 
 
 '''class JWTService:
@@ -27,16 +27,29 @@ import os
         return self.decode_token(token) is not None
 '''
 SECRET_KEY = os.getenv("JWT_SECRET", "your_local_secret")
+SHARE_SECRET = os.getenv("SHARE_TOKEN_SECRET", SECRET_KEY)
 
 def generate_token(username):
-    # Example payload
     payload = {"username": username}
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
     return token
 
 def validate_token(token):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         return True
     except jwt.InvalidTokenError:
         return False
+
+def generate_share_token(share_id: str, expires_at: datetime):
+    """Generate a JWT for shared file access including expiry (exp)."""
+    payload = {
+        "sid": share_id,
+        "exp": int(expires_at.replace(tzinfo=timezone.utc).timestamp()),
+        "jti": str(uuid.uuid4())
+    }
+    return jwt.encode(payload, SHARE_SECRET, algorithm="HS256")
+
+def decode_share_token(token: str):
+    return jwt.decode(token, SHARE_SECRET, algorithms=["HS256"]) 
+    

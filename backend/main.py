@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+import asyncio
+from db import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 from routes.upload_routes import router as upload_router
 from routes.auth_routes import router as auth_router
@@ -23,3 +25,9 @@ app.include_router(health_router, prefix="/api/health", tags=["health"])
 @app.get("/")
 def read_root():
     return {"message": "Welcome to VaultUpload API!"}
+
+@app.on_event("startup")
+async def on_startup():
+    # Create tables
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
