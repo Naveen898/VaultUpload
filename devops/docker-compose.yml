@@ -11,6 +11,8 @@ services:
       - FLASK_ENV=development
       - DATABASE_URL=your_database_url
       - SECRET_KEY=your_secret_key
+  - HCAPTCHA_ENABLED=0 # Set to 1 to enforce captcha
+  - HCAPTCHA_SECRET=your_hcaptcha_secret
     volumes:
       - ../backend:/app
     depends_on:

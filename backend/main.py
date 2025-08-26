@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
+import os
 import asyncio
 from db import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,6 +27,18 @@ app.include_router(health_router, prefix="/api/health", tags=["health"])
 @app.get("/")
 def read_root():
     return {"message": "Welcome to VaultUpload API!"}
+
+@app.get("/receive")
+def redirect_receive(request: Request):
+    """Redirect legacy backend /receive links to the frontend /receive page preserving query params.
+    This lets old links that pointed at the API port still function after changing link generation.
+    """
+    frontend_base = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173").rstrip("/")
+    query = request.url.query
+    target = f"{frontend_base}/receive"
+    if query:
+        target = f"{target}?{query}"
+    return RedirectResponse(target, status_code=307)
 
 @app.on_event("startup")
 async def on_startup():
