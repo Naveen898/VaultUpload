@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import fileService from '../services/fileService';
 import Alert from '../components/Alert';
@@ -13,10 +13,11 @@ const ReceivePage = () => {
   const [token, setToken] = useState(query.get('token') || '');
   const [secretWord, setSecretWord] = useState('');
   const [status, setStatus] = useState(null);
+  const [autoTried, setAutoTried] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
   const handleAccess = async (e) => {
-    e.preventDefault();
+    if(e) e.preventDefault();
     setStatus(null);
     setDownloading(true);
     try {
@@ -41,46 +42,43 @@ const ReceivePage = () => {
     }
   };
 
+  // Auto-attempt if token & fileId present and no secret word yet (optimistic) only once
+  useEffect(()=>{
+    if(!autoTried && fileId && token && !secretWord){
+      setAutoTried(true);
+      handleAccess();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileId, token]);
+
   return (
-    <div className="container">
-      <h2>Receive a File</h2>
-      <p>Enter the File ID, the Share Token you received, and the Secret Word if one was set.</p>
-      {status && <Alert type={status.type} message={status.message} />}
-      <form onSubmit={handleAccess} style={{maxWidth:'480px'}}>
-        <div style={{marginBottom:'0.75rem'}}>
-          <label>File ID</label>
-          <input
-            type="text"
-            value={fileId}
-            onChange={(e) => setFileId(e.target.value.trim())}
-            required
-            placeholder="e.g. 3f8d2c..."
-          />
+    <div className="container wide receive-dashboard">
+      <div className="page-header">
+        <div>
+          <h2>Receive File</h2>
+          <p className="muted">Provide the File ID, Share Token and Secret (if required) to securely download.</p>
         </div>
-        <div style={{marginBottom:'0.75rem'}}>
-          <label>Share Token (JWT)</label>
-          <input
-            type="text"
-            value={token}
-            onChange={(e) => setToken(e.target.value.trim())}
-            required
-            placeholder="Paste the share token"
-          />
-        </div>
-        <div style={{marginBottom:'0.75rem'}}>
-          <label>Secret Word (if required)</label>
-          <input
-            type="password"
-            value={secretWord}
-            onChange={(e) => setSecretWord(e.target.value)}
-            placeholder="Secret word"
-          />
-        </div>
-        <button type="submit" disabled={downloading}>{downloading ? 'Downloading...' : 'Access File'}</button>
-      </form>
-      <div style={{marginTop:'1rem'}}>
-        <h4>Have a full link?</h4>
-        <p>You can paste it in the browser directly. If this page was opened with query parameters, fields are prefilled.</p>
+      </div>
+      <div className="panel surface">
+        {status && <Alert type={status.type} message={status.message} />}
+        <form onSubmit={handleAccess} className="receive-form-grid">
+          <div className="form-row">
+            <label className="form-label">File ID</label>
+            <input className="control" type="text" value={fileId} onChange={(e) => setFileId(e.target.value.trim())} required placeholder="uuid_filename" />
+          </div>
+          <div className="form-row">
+            <label className="form-label">Share Token</label>
+              <input className="control" type="text" value={token} onChange={(e) => setToken(e.target.value.trim())} required placeholder="Paste token" />
+          </div>
+          <div className="form-row">
+            <label className="form-label">Secret Word</label>
+            <input className="control" type="password" value={secretWord} onChange={(e) => setSecretWord(e.target.value)} placeholder="Secret (if required)" />
+          </div>
+          <div className="actions">
+            <button type="submit" className="primary" disabled={downloading}>{downloading ? 'Downloading...' : 'Access File'}</button>
+          </div>
+        </form>
+        <div className="meta-note">If you used a full share link, fields are pre-filled automatically.</div>
       </div>
     </div>
   );

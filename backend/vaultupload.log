@@ -5,3 +5,59 @@
 2025-08-19 01:06:30,689 - vaultupload - INFO - Deleted file 388d85d1-0149-49d3-be07-4d1fdade56ed_sample.txt
 2025-08-19 01:06:42,339 - vaultupload - INFO - Uploaded file 7428687f-fc37-4f1d-acf4-01d22ba0a619_sample.txt metadata stored (db)
 2025-08-19 01:09:00,714 - vaultupload - INFO - Deleted file 7428687f-fc37-4f1d-acf4-01d22ba0a619_sample.txt
+2025-08-19 09:00:59,459 - vaultupload - INFO - Uploaded file 65f39fcf-8a6c-4586-aa95-86404c9dc905_sample.txt metadata stored (db)
+2025-08-19 09:03:32,468 - vaultupload - INFO - Uploaded file 415e9572-5971-494d-bbd8-3728b7eb9389_sample.txt metadata stored (db)
+2025-08-19 09:04:40,836 - vaultupload - INFO - Deleted file 65f39fcf-8a6c-4586-aa95-86404c9dc905_sample.txt
+2025-08-19 09:04:55,790 - vaultupload - INFO - Deleted file 415e9572-5971-494d-bbd8-3728b7eb9389_sample.txt
+2025-08-20 16:02:01,547 - vaultupload - INFO - Uploaded file 8877bcf1-a81f-41a4-9cab-acbb897b12f6_sample.txt metadata stored (db)
+2025-08-20 16:07:07,756 - vaultupload - INFO - Deleted file 8877bcf1-a81f-41a4-9cab-acbb897b12f6_sample.txt
+2025-08-21 19:44:31,411 - vaultupload - INFO - Uploaded file 30e13905-0be6-40c4-9102-ae864f0c098c_sample.txt metadata stored (db)
+2025-08-21 19:45:52,204 - vaultupload - INFO - Uploaded file 5e0e838d-f0a9-4783-a537-a476092408f5_sample.txt metadata stored (db)
+2025-08-21 19:46:55,886 - vaultupload - INFO - Deleted file 30e13905-0be6-40c4-9102-ae864f0c098c_sample.txt
+2025-08-21 19:46:58,651 - vaultupload - INFO - Deleted file 5e0e838d-f0a9-4783-a537-a476092408f5_sample.txt
+2025-08-25 19:31:36,889 - vaultupload - INFO - Uploaded file 59a61085-f390-478a-8d80-b3f8051be2ad_sample.txt metadata stored (db)
+2025-08-25 19:37:53,717 - vaultupload - INFO - Deleted file 59a61085-f390-478a-8d80-b3f8051be2ad_sample.txt
+2025-08-25 20:15:06,032 - vaultupload - ERROR - Failed to send reset email to naveenb.gaming@gmail.com: SMTP_HOST not configured
+Traceback (most recent call last):
+  File "D:\Project Dev\DevOps\VaultUpload\backend\services\email_service.py", line 38, in send_reset_email
+    host, port, user, password, starttls, from_email = _smtp_config()
+                                                       ~~~~~~~~~~~~^^
+  File "D:\Project Dev\DevOps\VaultUpload\backend\services\email_service.py", line 25, in _smtp_config
+    raise RuntimeError("SMTP_HOST not configured")
+RuntimeError: SMTP_HOST not configured
+2025-08-25 20:16:39,256 - vaultupload - ERROR - Failed to send reset email to naveenb.gaming@gmail.com: SMTP_HOST not configured
+Traceback (most recent call last):
+  File "D:\Project Dev\DevOps\VaultUpload\backend\services\email_service.py", line 38, in send_reset_email
+    host, port, user, password, starttls, from_email = _smtp_config()
+                                                       ~~~~~~~~~~~~^^
+  File "D:\Project Dev\DevOps\VaultUpload\backend\services\email_service.py", line 25, in _smtp_config
+    raise RuntimeError("SMTP_HOST not configured")
+RuntimeError: SMTP_HOST not configured
+2025-08-25 20:17:20,957 - vaultupload - INFO - Uploaded file e685afa3-0c23-4e6b-9a92-724b2d203f54_sample.txt metadata stored (db)
+2025-08-25 20:35:07,083 - vaultupload - INFO - Deleted file e685afa3-0c23-4e6b-9a92-724b2d203f54_sample.txt
+2025-08-25 20:35:17,539 - vaultupload - INFO - Uploaded file 5dd6cd97-b447-493f-99b5-5ed7d6866415_sample.txt metadata stored (db)
+2025-08-25 20:38:18,261 - vaultupload - INFO - Deleted file 5dd6cd97-b447-493f-99b5-5ed7d6866415_sample.txt
+2025-08-25 20:38:34,795 - vaultupload - INFO - Uploaded file 261cd6f4-5636-4172-8385-d2d3a7211e15_sample.txt metadata stored (db)
+2025-08-25 20:39:14,204 - vaultupload - INFO - Deleted file 261cd6f4-5636-4172-8385-d2d3a7211e15_sample.txt
+2025-08-25 20:39:38,936 - vaultupload - INFO - Uploaded file 3828e392-2e14-4f50-8d81-fffa8fec854d_sample.txt metadata stored (db)
+2025-08-25 20:43:10,535 - vaultupload - INFO - Deleted file 3828e392-2e14-4f50-8d81-fffa8fec854d_sample.txt
+2025-08-25 20:43:25,651 - vaultupload - INFO - Uploaded file dcf46779-1c7c-4505-8fca-6a3df8bad617_sample.txt metadata stored (db)
+2025-08-25 20:43:33,470 - vaultupload - INFO - Deleted file dcf46779-1c7c-4505-8fca-6a3df8bad617_sample.txt
+2025-08-25 23:45:18,564 - vaultupload - INFO - Uploaded file 61fd7063-6a66-4d1c-ac58-acde0e26c3c9_sample.txt metadata stored (db)
+2025-08-25 23:54:12,301 - vaultupload - INFO - Deleted file 61fd7063-6a66-4d1c-ac58-acde0e26c3c9_sample.txt
+2025-08-25 23:54:30,241 - vaultupload - INFO - Uploaded file d408a661-1aa7-4171-820d-4991e2414dfa_sample.txt metadata stored (db)
+2025-08-25 23:56:39,557 - vaultupload - INFO - Deleted file d408a661-1aa7-4171-820d-4991e2414dfa_sample.txt
+2025-08-25 23:56:48,057 - vaultupload - INFO - Uploaded file 2356cf90-4538-4709-b7b7-9fcd8bf96bc8_sample.txt metadata stored (db)
+2025-08-25 23:59:16,974 - vaultupload - INFO - Deleted file 2356cf90-4538-4709-b7b7-9fcd8bf96bc8_sample.txt
+2025-08-26 00:00:14,078 - vaultupload - INFO - Uploaded file 2d41e6d6-734a-43ce-8c30-d9e5ca0ebdf0_My Spotify Library.xlsx metadata stored (db)
+2025-08-26 00:04:01,936 - vaultupload - INFO - Deleted file 2d41e6d6-734a-43ce-8c30-d9e5ca0ebdf0_My Spotify Library.xlsx
+2025-08-26 00:04:13,529 - vaultupload - INFO - Uploaded file 92424a47-aca4-4a6c-90d3-c6e375b91f00_FM_Rivalries.xlsx metadata stored (db)
+2025-08-26 00:06:05,212 - vaultupload - INFO - Deleted file 92424a47-aca4-4a6c-90d3-c6e375b91f00_FM_Rivalries.xlsx
+2025-08-26 00:06:28,704 - vaultupload - INFO - Uploaded file eba768fe-d0a6-4dce-b5d7-16bcfb4b9104_My Spotify Library.xlsx metadata stored (db)
+2025-08-26 00:10:07,257 - vaultupload - INFO - Deleted file eba768fe-d0a6-4dce-b5d7-16bcfb4b9104_My Spotify Library.xlsx
+2025-08-26 00:10:19,279 - vaultupload - INFO - Uploaded file f5f2f859-d496-41f7-93ce-3bea26546551_csr2 elite tuners.xlsx metadata stored (db)
+2025-08-26 00:10:19,279 - vaultupload - INFO - Generated receive_link http://localhost:5173/receive?fileId=f5f2f859-d496-41f7-93ce-3bea26546551_csr2+elite+tuners.xlsx&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzaWQiOiJmNWYyZjg1OS1kNDk2LTQxZjctOTNjZS0zYmVhMjY1NDY1NTFfY3NyMiBlbGl0ZSB0dW5lcnMueGxzeCIsImV4cCI6MTc1NjIxOTIxOSwianRpIjoiMTU5Mjk3NWEtNzg0MS00MGVkLTlhM2YtMTViMmExNTA2ZmE0In0.WL9uJ5ZP-TmuB_jIv9WX7FvwoeAi7kKcWByz4hAW77A for file f5f2f859-d496-41f7-93ce-3bea26546551_csr2 elite tuners.xlsx
+2025-08-26 00:11:10,759 - vaultupload - INFO - Deleted file f5f2f859-d496-41f7-93ce-3bea26546551_csr2 elite tuners.xlsx
+2025-08-26 00:11:17,793 - vaultupload - INFO - Uploaded file cd3fd070-b9bc-48b6-8e14-696f8b5663a8_csr2 elite tuners.xlsx metadata stored (db)
+2025-08-26 00:11:17,794 - vaultupload - INFO - Generated receive_link http://localhost:5173/receive?fileId=cd3fd070-b9bc-48b6-8e14-696f8b5663a8_csr2+elite+tuners.xlsx&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzaWQiOiJjZDNmZDA3MC1iOWJjLTQ4YjYtOGUxNC02OTZmOGI1NjYzYThfY3NyMiBlbGl0ZSB0dW5lcnMueGxzeCIsImV4cCI6MTc1NjIxOTI3NywianRpIjoiOWI5MDg0ZGMtZjQwNi00NmY0LTk3MTgtYTA5YmRlMTUzODdiIn0.jS7-3u8FCdxjvzF__z8zhffzMd7_nDDoCZw5-4Qbz5g for file cd3fd070-b9bc-48b6-8e14-696f8b5663a8_csr2 elite tuners.xlsx
+2025-08-26 00:12:34,639 - vaultupload - INFO - Deleted file cd3fd070-b9bc-48b6-8e14-696f8b5663a8_csr2 elite tuners.xlsx
